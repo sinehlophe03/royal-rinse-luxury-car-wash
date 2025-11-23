@@ -255,3 +255,14 @@ if __name__ == '__main__':
 @app.route('/admin_dashboard')
 def admin():  # Flask uses this function name as the endpoint
     pass
+    @app.route('/admin')
+def admin_dashboard():
+    if not session.get('admin'): return redirect(url_for('admin_login'))
+    today = date.today()
+    # Problem is likely in one of these four lines:
+    total_today = Booking.query.filter_by(date=today).count()
+    approved_today = Booking.query.filter_by(date=today, status='approved').count()
+    pending = Booking.query.filter_by(status='pending').count()
+    revenue_today = sum([b.amount for b in Booking.query.filter_by(date=today, paid=True).all()])
+    bookings = Booking.query.order_by(Booking.status.asc(), Booking.date.desc(), Booking.time).all()
+    return render_template('admin.html', bookings=bookings, total_today=total_today, approved_today=approved_today, pending=pending, revenue_today=revenue_today)
