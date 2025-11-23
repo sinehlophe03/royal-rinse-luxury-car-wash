@@ -9,11 +9,24 @@ app.secret_key = os.environ.get('SECRET_KEY', 'royalrinse-secret')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///royalrinse.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# app.py (around lines 14-17)
+
 db = SQLAlchemy(app)
+
+# FIX: Run db.create_all() outside of the main block so it executes during deployment
+with app.app_context():
+    db.create_all()
+    # print("Database tables ensured to be created.") # Optional logging
 
 # Admin creds (default)
 ADMIN_USER = 'admin'
 ADMIN_PASS = '1234'
+
+# ... rest of your code ...
+
+if __name__ == '__main__':
+    # No need to call db.create_all() here anymore.
+    app.run(debug=True)
 
 # Models
 class User(db.Model):
