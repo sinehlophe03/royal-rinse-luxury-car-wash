@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
   <h2>Admin Login</h2>
-  <form method="post" action="/admin/login">
+  <form method="post" action="{{ url_for('admin_login') }}">
     <label>Username<input name="username" required></label>
     <label>Password<input name="password" type="password" required></label>
     <button class="btn" type="submit">Login</button>
