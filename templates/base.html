@@ -1,81 +1,82 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Royal Rinse Car Wash</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Royal Rinse Car Wash</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="topbar">
-      <div class="container header-inner">
-        <div class="brand">
-          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo" class="logo">
-          <span class="title">Royal Rinse</span>
-        </div>
-        <div class="menu-actions">
-          {% if session.get('user_id') %}
-            <a class="txt" href="{{ url_for('my_bookings') }}">My Bookings</a>
-            <a class="txt" href="{{ url_for('logout') }}">Logout</a>
-          {% else %}
-            <a class="txt" href="{{ url_for('login') }}">Login</a>
-            <a class="txt" href="{{ url_for('register') }}">Register</a>
-          {% endif %}
-          <button id="menu-toggle" aria-label="Open menu" class="hamburger">☰</button>
-        </div>
-      </div>
-    </div>
+  <header class="site-header">
+    <div class="topbar">
+      <div class="container header-inner">
+        <div class="brand">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo" class="logo">
+          <span class="title">Royal Rinse</span>
+        </div>
+        <div class="menu-actions">
+          {% if session.get('user_id') %}
+            <a class="txt" href="{{ url_for('my_bookings') }}">My Bookings</a>
+            <a class="txt" href="{{ url_for('logout') }}">Logout</a>
+          {% else %}
+            <a class="txt" href="{{ url_for('login') }}">Login</a>
+            <a class="txt" href="{{ url_for('register') }}">Register</a>
+          {% endif %}
+          <button id="menu-toggle" aria-label="Open menu" class="hamburger">☰</button>
+        </div>
+      </div>
+    </div>
 
-    <nav id="main-nav" class="main-nav">
-      <div class="nav-inner container">
-        <a href="{{ url_for('index') }}" class="nav-item">Home</a>
-        <a href="{{ url_for('book') }}" class="nav-item">Book</a>
-        <a href="{{ url_for('schedule') }}" class="nav-item">Schedule</a>
-        <a href="{{ url_for('admin') }}" class="nav-item">Admin</a>
-        <a href="https://wa.me/76716978" class="nav-item">WhatsApp</a>
-      </div>
-    </nav>
-  </header>
+    <nav id="main-nav" class="main-nav">
+      <div class="nav-inner container">
+        <a href="{{ url_for('index') }}" class="nav-item">Home</a>
+        <a href="{{ url_for('book') }}" class="nav-item">Book</a>
+        <a href="{{ url_for('schedule') }}" class="nav-item">Schedule</a>
+        <a href="{{ **url_for('admin_dashboard')** }}" class="nav-item">Admin</a>
+        <a href="https://wa.me/76716978" class="nav-item">WhatsApp</a>
+      </div>
+    </nav>
+  </header>
 
-  <main class="container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flashes">
-          {% for cat, msg in messages %}
-            <div class="flash {{cat}}">{{msg}}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
-  </main>
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for cat, msg in messages %}
+            <div class="flash {{cat}}">{{msg}}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
 
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-grid">
-        <div>
-          <h4>Contact</h4>
-          <p>Mbabane (Sdwashini)</p>
-          <p>Phone: 76716978</p>
-          <p>Email: royalrinse07@gmail.com</p>
-        </div>
-        <div>
-          <h4>Follow</h4>
-          <p>Instagram · Facebook</p>
-        </div>
-      </div>
-      <div class="copy">© {{ current_year }} Royal Rinse</div>
-    </div>
-  </footer>
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h4>Contact</h4>
+          <p>Mbabane (Sdwashini)</p>
+          <p>Phone: 76716978</p>
+          <p>Email: royalrinse07@gmail.com</p>
+        </div>
+        <div>
+          <h4>Follow</h4>
+          <p>Instagram · Facebook</p>
+        </div>
+      </div>
+      <div class="copy">© {{ current_year }} Royal Rinse</div>
+      
+    </div>
+  </footer>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', ()=>{
-      const btn = document.getElementById('menu-toggle');
-      const nav = document.getElementById('main-nav');
-      btn.addEventListener('click', ()=>{ nav.classList.toggle('open'); });
-    });
-  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const btn = document.getElementById('menu-toggle');
+      const nav = document.getElementById('main-nav');
+      btn.addEventListener('click', ()=>{ nav.classList.toggle('open'); });
+    });
+  </script>
 </body>
 </html>
