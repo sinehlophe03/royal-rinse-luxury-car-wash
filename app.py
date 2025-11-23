@@ -251,3 +251,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
+@app.route('/admin_dashboard')
+def admin():  # Flask uses this function name as the endpoint
+    pass
