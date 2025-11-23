@@ -255,4 +255,5 @@ def bookings_json():
     } for b in all_b])
 
 if __name__ == '__main__':
+    # This block is now only for local development run.
     app.run(debug=True)
