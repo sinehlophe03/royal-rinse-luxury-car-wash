@@ -1,0 +1,33 @@
+:root{--black:#0b0b0b;--gold:#d4af37;--muted:#bdb6a6;--bg:#0f0f10}
+*{box-sizing:border-box}
+body{font-family:Inter, system-ui, Arial, sans-serif;margin:0;color:var(--muted);background:linear-gradient(180deg,#070707,#0f0f10);-webkit-font-smoothing:antialiased}
+.container{max-width:1100px;margin:0 auto;padding:20px}
+.site-header{position:relative;border-bottom:1px solid rgba(255,255,255,0.03)}
+.topbar{background:rgba(0,0,0,0.6);backdrop-filter:blur(4px)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 0}
+.brand{display:flex;align-items:center;gap:10px;color:var(--gold);font-weight:800}
+.logo{height:36px;border-radius:6px}
+.title{font-size:1.2rem;color:var(--gold);}
+.menu-actions{display:flex;align-items:center;gap:12px}
+.menu-actions .txt{color:var(--muted);text-decoration:none;margin-right:8px}
+.hamburger{background:var(--gold);color:#0b0b0b;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
+.main-nav{position:fixed;left:0;right:0;top:0;height:0;overflow:hidden;background:linear-gradient(180deg,#0b0b0b,#1a1a1a);transition:height 300ms ease;z-index:30}
+.main-nav.open{height:220px}
+.main-nav .nav-inner{display:flex;gap:20px;align-items:center;padding:24px;justify-content:center}
+.nav-item{color:var(--gold);text-decoration:none;padding:8px 14px;border-radius:8px}
+.hero{padding:60px 20px;text-align:center;color:var(--gold)}
+.royal-hero h1{font-size:2.2rem;margin:0}
+.lead{color:#e8d7a8;margin-top:8px}
+.btn{display:inline-block;padding:10px 18px;border-radius:12px;background:var(--gold);color:#0b0b0b;text-decoration:none;border:none;cursor:pointer;font-weight:800;margin-top:16px}
+.services-preview{margin-top:30px}
+.service-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.service-card{background:rgba(255,255,255,0.03);padding:18px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.6);border:1px solid rgba(212,175,55,0.04);min-height:200px;display:flex;flex-direction:column;justify-content:space-between}
+.price{font-weight:700;color:var(--gold);margin-top:8px}
+.table{width:100%;border-collapse:collapse;margin-top:12px}
+.table th,.table td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:left;color:var(--muted);font-size:0.95rem}
+input, textarea, select{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:#0b0b0b;color:var(--muted)}
+.flashes .flash{padding:10px;margin:10px 0;border-radius:8px;background:rgba(255,255,255,0.02)}
+.site-footer{padding:20px;text-align:center;color:rgba(255,255,255,0.6);border-top:1px solid rgba(255,255,255,0.03);margin-top:40px}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.stat{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;min-width:140px;text-align:center}
+@media(max-width:600px){.nav-inner{flex-direction:column}.main-nav.open{height:320px}}
