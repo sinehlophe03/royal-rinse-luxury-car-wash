@@ -4,29 +4,23 @@ from datetime import datetime, date
 import os
 
 app = Flask(__name__)
+# Security: Use environment variable for secret key
 app.secret_key = os.environ.get('SECRET_KEY', 'royalrinse-secret')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///royalrinse.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# app.py (around lines 14-17)
-
 db = SQLAlchemy(app)
 
-# FIX: Run db.create_all() outside of the main block so it executes during deployment
+# 🛠️ CRITICAL FIX: Run db.create_all() outside the 'if __name__' block.
+# This ensures tables are created immediately when Gunicorn/Render starts the app,
+# fixing the "no such table: booking" error that causes the 500 status.
 with app.app_context():
     db.create_all()
-    # print("Database tables ensured to be created.") # Optional logging
 
-# Admin creds (default)
-ADMIN_USER = 'admin'
-ADMIN_PASS = '1234'
-
-# ... rest of your code ...
-
-if __name__ == '__main__':
-    # No need to call db.create_all() here anymore.
-    app.run(debug=True)
+# 💡 ADDON: Admin creds - using environment variables for security in deployment
+ADMIN_USER = os.environ.get('ADMIN_USER', 'admin')
+ADMIN_PASS = os.environ.get('ADMIN_PASS', '1234')
 
 # Models
 class User(db.Model):
@@ -261,21 +255,4 @@ def bookings_json():
     } for b in all_b])
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
-
-@app.route('/admin_dashboard')
-def admin():  # Flask uses this function name as the endpoint
-    pass
-    @app.route('/admin')
-def admin_dashboard():
-    if not session.get('admin'): return redirect(url_for('admin_login'))
-    today = date.today()
-    # Problem is likely in one of these four lines:
-    total_today = Booking.query.filter_by(date=today).count()
-    approved_today = Booking.query.filter_by(date=today, status='approved').count()
-    pending = Booking.query.filter_by(status='pending').count()
-    revenue_today = sum([b.amount for b in Booking.query.filter_by(date=today, paid=True).all()])
-    bookings = Booking.query.order_by(Booking.status.asc(), Booking.date.desc(), Booking.time).all()
-    return render_template('admin.html', bookings=bookings, total_today=total_today, approved_today=approved_today, pending=pending, revenue_today=revenue_today)
