@@ -30,5 +30,4 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const t = new Date(); t.setDate(t.getDate()+1); dateInput.valueAsDate = t;
     fetchSlots();
   }
-  // menu toggle logic is in base template script
 });
