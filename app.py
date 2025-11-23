@@ -13,7 +13,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # 🛠️ CRITICAL FIX: Run db.create_all() outside the 'if __name__' block.
-# This ensures tables are created immediately when Gunicorn/Render starts the app.
+# This ensures tables are created immediately when Gunicorn/Render starts the app,
+# fixing the "no such table: booking" error on both /admin and /schedule.
 with app.app_context():
     db.create_all()
 
@@ -200,6 +201,7 @@ def schedule():
         try: selected = datetime.strptime(date_str, '%Y-%m-%d').date()
         except: selected = date.today()
     else: selected = date.today()
+    # This query will now work because db.create_all() runs on start
     bookings = Booking.query.filter_by(date=selected, status='approved', paid=True).order_by(Booking.time).all()
     return render_template('schedule.html', bookings=bookings, today=selected)
 
