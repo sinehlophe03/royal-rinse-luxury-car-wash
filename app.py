@@ -1,29 +1,23 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date
-import os
-import logging
-import traceback
+import os, logging, traceback
 
-# ---------- App / DB setup ----------
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'royalrinse-secret')
 
-# Use sqlite file in project root (Render writable)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///royalrinse.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Ensure tables are created on startup (works under Gunicorn/Render)
+# Ensure DB tables are created at startup (works under Gunicorn/Render)
 with app.app_context():
     db.create_all()
 
-# Admin credentials (use env vars in production)
 ADMIN_USER = os.environ.get('ADMIN_USER', 'admin')
 ADMIN_PASS = os.environ.get('ADMIN_PASS', '1234')
 
-# ---------- Models ----------
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fullname = db.Column(db.String(120))
@@ -47,20 +41,18 @@ class Booking(db.Model):
     amount = db.Column(db.Float, default=0.0)
     technician = db.Column(db.String(80), nullable=True)
 
-# ---------- Config ----------
 DEFAULT_SLOTS = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00']
 SERVICE_PRICES = {'basic': 15.0, 'deluxe': 30.0, 'royal': 50.0}
 
-# ---------- Logging ----------
-logger = logging.getLogger(__name__)
+# logging
+logger = logging.getLogger('royalrinse')
 logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s'))
-logger.addHandler(handler)
+if not logger.handlers:
+    ch = logging.StreamHandler()
+    ch.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s'))
+    logger.addHandler(ch)
 
-# ---------- Helpers ----------
 def available_slots_for(date_obj):
-    """Return available time slots for a date, excluding approved bookings."""
     try:
         if date_obj is None:
             return DEFAULT_SLOTS.copy()
@@ -68,8 +60,7 @@ def available_slots_for(date_obj):
         taken = [b.time for b in bookings if b.time]
         return [s for s in DEFAULT_SLOTS if s not in taken]
     except Exception:
-        logger.error("Error computing available slots:\n%s", traceback.format_exc())
-        # On error, return all slots (safer UX than server error)
+        logger.error("available_slots_for error:\n%s", traceback.format_exc())
         return DEFAULT_SLOTS.copy()
 
 @app.context_processor
@@ -77,7 +68,6 @@ def inject_common():
     contact = {'phone': '76716978', 'email': 'royalrinse07@gmail.com', 'location': 'Mbabane, Sdwashini'}
     return {'current_year': datetime.utcnow().year, 'contact': contact}
 
-# ---------- Routes ----------
 @app.route('/')
 def index():
     services = [
@@ -87,88 +77,62 @@ def index():
     ]
     return render_template('index.html', services=services)
 
-# Register / Login
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method == 'POST':
-        fullname = request.form.get('fullname')
-        email = request.form.get('email')
-        password = request.form.get('password')
+        fullname = request.form.get('fullname'); email = request.form.get('email'); password = request.form.get('password')
         if not (fullname and email and password):
-            flash('Please fill all fields', 'danger')
-            return redirect(url_for('register'))
+            flash('Please fill all fields', 'danger'); return redirect(url_for('register'))
         if User.query.filter_by(email=email).first():
-            flash('Email already registered', 'warning')
-            return redirect(url_for('register'))
-        u = User(fullname=fullname, email=email, password=password)
-        db.session.add(u); db.session.commit()
-        flash('Account created, please login', 'success')
-        return redirect(url_for('login'))
+            flash('Email already registered', 'warning'); return redirect(url_for('register'))
+        u = User(fullname=fullname, email=email, password=password); db.session.add(u); db.session.commit()
+        flash('Account created, please login', 'success'); return redirect(url_for('login'))
     return render_template('register.html')
 
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        # admin login
+        email = request.form.get('email'); password = request.form.get('password')
         if email == ADMIN_USER and password == ADMIN_PASS:
-            session['admin'] = True
-            flash('Admin logged in', 'success')
-            return redirect(url_for('admin_dashboard'))
+            session['admin'] = True; flash('Admin logged in', 'success'); return redirect(url_for('admin_dashboard'))
         user = User.query.filter_by(email=email, password=password).first()
         if user:
-            session['user_id'] = user.id
-            session['fullname'] = user.fullname
-            flash('Logged in', 'success')
-            return redirect(url_for('index'))
+            session['user_id'] = user.id; session['fullname'] = user.fullname; flash('Logged in', 'success'); return redirect(url_for('index'))
         flash('Invalid credentials', 'danger')
     return render_template('login.html')
 
 @app.route('/logout')
 def logout():
-    session.clear()
-    flash('Logged out', 'info')
-    return redirect(url_for('index'))
+    session.clear(); flash('Logged out', 'info'); return redirect(url_for('index'))
 
-# Booking flow
 @app.route('/book', methods=['GET','POST'])
 def book():
     if 'user_id' not in session:
-        flash('Please login to book', 'warning')
-        return redirect(url_for('login'))
+        flash('Please login to book', 'warning'); return redirect(url_for('login'))
     if request.method == 'POST':
         name = request.form.get('customer_name') or session.get('fullname')
-        phone = request.form.get('phone')
-        email = request.form.get('email')
-        service = request.form.get('service') or 'basic'
-        date_str = request.form.get('date')
-        time_slot = request.form.get('time')
-        address = request.form.get('address')
-        notes = request.form.get('notes')
+        phone = request.form.get('phone'); email = request.form.get('email')
+        service = request.form.get('service') or 'basic'; date_str = request.form.get('date'); time_slot = request.form.get('time')
+        address = request.form.get('address'); notes = request.form.get('notes')
         if not (name and phone and date_str and time_slot and address):
-            flash('Please fill required fields', 'danger')
-            return redirect(url_for('book'))
+            flash('Please fill required fields', 'danger'); return redirect(url_for('book'))
         try:
             d = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
             flash('Invalid date', 'danger'); return redirect(url_for('book'))
-        # check slot availability
         if time_slot not in available_slots_for(d):
             flash('Slot not available', 'warning'); return redirect(url_for('book'))
         amount = SERVICE_PRICES.get(service, SERVICE_PRICES['basic'])
         b = Booking(customer_name=name, user_id=session.get('user_id'), phone=phone, email=email, service=service, date=d, time=time_slot, address=address, notes=notes, amount=amount)
         db.session.add(b); db.session.commit()
         session['pending_booking_id'] = b.id
-        flash('Booking created. Proceed to payment.', 'info')
-        return redirect(url_for('payment'))
+        flash('Booking created. Proceed to payment.', 'info'); return redirect(url_for('payment'))
     return render_template('book.html')
 
 @app.route('/api/slots')
 def api_slots():
     date_str = request.args.get('date')
-    if not date_str:
-        return jsonify({'slots': available_slots_for(None)})
+    if not date_str: return jsonify({'slots': available_slots_for(None)})
     try:
         d = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
@@ -184,22 +148,16 @@ def payment():
     if not b:
         flash('Booking not found', 'danger'); return redirect(url_for('book'))
     if request.method == 'POST':
-        card = request.form.get('card_number','').strip()
-        exp = request.form.get('exp','').strip()
-        cvv = request.form.get('cvv','').strip()
-        method = request.form.get('payment_method','card')
-        # demo validation
+        card = request.form.get('card_number','').strip(); exp = request.form.get('exp','').strip(); cvv = request.form.get('cvv','').strip(); method = request.form.get('payment_method','card')
         if method == 'card':
             if len(card) < 12 or len(cvv) < 3:
                 flash('Invalid card (demo only)', 'danger'); return redirect(url_for('payment'))
             b.paid = True
         else:
-            # record payment method; do not mark as paid for cash/mobile by default
             b.paid = False
         db.session.commit()
         session.pop('pending_booking_id', None)
-        flash('Payment step completed. Waiting admin approval.', 'success')
-        return redirect(url_for('my_bookings'))
+        flash('Payment step completed. Waiting admin approval.', 'success'); return redirect(url_for('my_bookings'))
     return render_template('payment.html', booking=b)
 
 @app.route('/my_bookings')
@@ -213,12 +171,9 @@ def my_bookings():
 def schedule():
     date_str = request.args.get('date')
     if date_str:
-        try:
-            selected = datetime.strptime(date_str, '%Y-%m-%d').date()
-        except Exception:
-            selected = date.today()
-    else:
-        selected = date.today()
+        try: selected = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except: selected = date.today()
+    else: selected = date.today()
     try:
         bookings = Booking.query.filter_by(date=selected, status='approved', paid=True).order_by(Booking.time).all()
     except Exception:
@@ -227,15 +182,12 @@ def schedule():
         bookings = []
     return render_template('schedule.html', bookings=bookings, today=selected)
 
-# Admin
 @app.route('/admin/login', methods=['GET','POST'])
 def admin_login():
     if request.method == 'POST':
         user = request.form.get('username'); pw = request.form.get('password')
         if user == ADMIN_USER and pw == ADMIN_PASS:
-            session['admin'] = True
-            flash('Admin logged in', 'success')
-            return redirect(url_for('admin_dashboard'))
+            session['admin'] = True; flash('Admin logged in', 'success'); return redirect(url_for('admin_dashboard'))
         flash('Invalid admin credentials', 'danger')
     return render_template('admin_login.html')
 
@@ -245,8 +197,7 @@ def admin_logout():
 
 @app.route('/admin')
 def admin_dashboard():
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
+    if not session.get('admin'): return redirect(url_for('admin_login'))
     try:
         today = date.today()
         total_today = Booking.query.filter_by(date=today).count()
@@ -263,8 +214,7 @@ def admin_dashboard():
 
 @app.route('/admin/action/<int:bid>', methods=['POST'])
 def admin_action(bid):
-    if not session.get('admin'):
-        flash('Not authorized', 'danger'); return redirect(url_for('admin_login'))
+    if not session.get('admin'): flash('Not authorized', 'danger'); return redirect(url_for('admin_login'))
     action = request.form.get('action'); tech = request.form.get('technician')
     b = Booking.query.get_or_404(bid)
     if action == 'approve':
@@ -279,7 +229,6 @@ def admin_action(bid):
     flash('Action applied', 'success')
     return redirect(url_for('admin_dashboard'))
 
-# JSON debug endpoint
 @app.route('/bookings.json')
 def bookings_json():
     all_b = Booking.query.order_by(Booking.date.desc(), Booking.time).all()
@@ -288,12 +237,10 @@ def bookings_json():
         "time": b.time, "service": b.service, "status": b.status, "paid": b.paid
     } for b in all_b])
 
-# Error handler - shows friendly message and logs stacktrace
 @app.errorhandler(500)
 def internal_error(e):
     logger.error("Unhandled exception:\n%s", traceback.format_exc())
     return render_template('500.html', error=str(e)), 500
 
 if __name__ == '__main__':
-    # local dev only
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
