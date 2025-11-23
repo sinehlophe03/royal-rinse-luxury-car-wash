@@ -13,8 +13,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # 🛠️ CRITICAL FIX: Run db.create_all() outside the 'if __name__' block.
-# This ensures tables are created immediately when Gunicorn/Render starts the app,
-# fixing the "no such table: booking" error that causes the 500 status.
+# This ensures tables are created immediately when Gunicorn/Render starts the app.
 with app.app_context():
     db.create_all()
 
